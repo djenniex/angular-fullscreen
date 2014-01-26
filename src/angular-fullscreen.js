@@ -1,13 +1,13 @@
 (function(window) {
    var createModule = function(angular) {
-      var module = angular.module('FBAngular', []);
+      var module = angular.module('angular-fullscreen', []);
 
       module.factory('Fullscreen', ['$document', function ($document) {
          var document = $document[0];
 
-         return {
+         var serviceInstance = {
             all: function() {
-               this.enable( document.documentElement );
+               serviceInstance.enable( document.documentElement );
             },
             enable: function(element) {
                if(element.requestFullScreen) {
@@ -15,24 +15,36 @@
                } else if(element.mozRequestFullScreen) {
                   element.mozRequestFullScreen();
                } else if(element.webkitRequestFullScreen) {
-                  element.webkitRequestFullScreen();
+                  element.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
+               } else if (element.msRequestFullscreen) {
+                  element.msRequestFullscreen();
                }
             },
             cancel: function() {
-
                if(document.cancelFullScreen) {
                   document.cancelFullScreen();
                } else if(document.mozCancelFullScreen) {
                   document.mozCancelFullScreen();
                } else if(document.webkitCancelFullScreen) {
                   document.webkitCancelFullScreen();
+               } else if (document.msExitFullscreen) {
+                  document.msExitFullscreen();
                }
             },
             isEnabled: function(){
-               var fullscreenElement = document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement;
+               var fullscreenElement = document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
                return fullscreenElement;
+            },
+            isSupported: function() {
+               var docElm = document.documentElement;
+               return docElm.requestFullScreen || docElm.mozRequestFullScreen || docElm.webkitRequestFullScreen || docElm.msRequestFullscreen              
+            },
+            toggleAll: function(){
+                serviceInstance.isEnabled() ? serviceInstance.cancel() : serviceInstance.all();
             }
          };
+
+         return serviceInstance;
       }]);
 
       module.directive('fullscreen', ['Fullscreen', '$document', function(Fullscreen, $document) {
@@ -63,7 +75,7 @@
    };
 
    if (typeof define === "function" && define.amd) {
-      define("FBAngular", ['angular'], function (angular) { return createModule(angular); } );
+      define("angular-fullscreen", ['angular'], function (angular) { return createModule(angular); } );
    } else {
       createModule(window.angular);
    }
